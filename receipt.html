@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>🧾 Akash's Kitchen Receipt</title>
+<style>
+  body { font-family: Arial; padding: 20px; background:#f9f9f9; }
+  .receipt { border:1px solid #333; padding:20px; max-width:400px; margin:auto; background:#fff; border-radius:8px;}
+  h1,h2 { text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="receipt">
+  <h1>🧾 Akash's Kitchen</h1>
+  <p><strong>Order ID:</strong> <span id="orderId"></span></p>
+  <p><strong>Name:</strong> <span id="name"></span></p>
+  <p><strong>Mobile:</strong> <span id="mobile"></span></p>
+  <div id="items"></div>
+  <h3>Total: <span id="total"></span> NTD</h3>
+  <p style="color:green;"><strong>Show this receipt at the cashier to pay.</strong></p>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
+
+// Get orderId from URL
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("orderId");
+
+// Fetch order info
+async function loadReceipt() {
+  try {
+    const res = await fetch(API_URL);
+    const orders = await res.json();
+    const order = orders.find(o => o.orderId === orderId);
+
+    if (!order) {
+      document.body.innerHTML = "<p>Order not found</p>";
+      return;
+    }
+
+    document.getElementById("orderId").innerText = order.orderId;
+    document.getElementById("name").innerText = order.name;
+    document.getElementById("mobile").innerText = order.mobile;
+    document.getElementById("items").innerHTML = `<p><strong>Items:</strong><br>${order.items.replace(/,/g,'<br>')}</p>`;
+    document.getElementById("total").innerText = order.total;
+
+  } catch(err) {
+    console.error(err);
+    document.body.innerHTML = "<p>Error loading receipt</p>";
+  }
+}
+
+loadReceipt();
+</script>
+</body>
+</html>
