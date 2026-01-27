@@ -9,11 +9,12 @@
     .menu-section { margin-bottom: 20px; }
     .menu-item { margin: 8px 0; }
     button { padding: 6px 12px; margin-left: 10px; }
-    #cart, #receipt {
+    #cart, #receipt, #qr-container {
       border-top: 2px solid #ccc;
       padding-top: 10px;
       margin-top: 20px;
     }
+    #qr-container { text-align:center; display:none; }
   </style>
 </head>
 
@@ -43,6 +44,12 @@
   <div id="cart-items">No items added yet.</div>
   <div id="cart-total"></div>
   <button onclick="placeOrder()">Place Order</button>
+</div>
+
+<!-- QR CODE -->
+<div id="qr-container">
+  <h2>Scan QR to view your receipt</h2>
+  <img id="qr" src="" alt="QR Code" />
 </div>
 
 <!-- RECEIPT -->
@@ -146,6 +153,7 @@ function placeOrder() {
   })
   .then(() => {
     showReceipt(orderId, name, mobile, cart);
+    showQRCode(orderId);
     cart = [];
     displayCart();
   })
@@ -170,6 +178,14 @@ function showReceipt(orderId, name, mobile, items) {
   });
 
   document.getElementById("r-total").innerText = total;
+}
+
+/* SHOW QR CODE */
+function showQRCode(orderId) {
+  const qrContainer = document.getElementById("qr-container");
+  qrContainer.style.display = "block";
+  const url = encodeURIComponent(`https://YOUR_HOST/receipt.html?orderId=${orderId}`);
+  document.getElementById("qr").src = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${url}`;
 }
 </script>
 
