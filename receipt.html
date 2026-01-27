@@ -7,11 +7,12 @@
   body { font-family: Arial; padding: 20px; background:#f9f9f9; }
   .receipt { border:1px solid #333; padding:20px; max-width:400px; margin:auto; background:#fff; border-radius:8px;}
   h1,h2 { text-align:center; }
+  button { display:block; margin: 20px auto; padding: 8px 16px; }
 </style>
 </head>
 <body>
 
-<div class="receipt">
+<div class="receipt" id="receipt-content">
   <h1>🧾 Akash's Kitchen</h1>
   <p><strong>Order ID:</strong> <span id="orderId"></span></p>
   <p><strong>Name:</strong> <span id="name"></span></p>
@@ -20,6 +21,11 @@
   <h3>Total: <span id="total"></span> NTD</h3>
   <p style="color:green;"><strong>Show this receipt at the cashier to pay.</strong></p>
 </div>
+
+<button onclick="downloadPDF()">Download PDF</button>
+
+<!-- Include jsPDF library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
@@ -53,6 +59,23 @@ async function loadReceipt() {
 }
 
 loadReceipt();
+
+// PDF generation
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const receipt = document.getElementById("receipt-content").innerText;
+  const lines = receipt.split("\n");
+
+  let y = 10;
+  lines.forEach(line => {
+    doc.text(line, 10, y);
+    y += 10;
+  });
+
+  doc.save(`AkashKitchen_${orderId}.pdf`);
+}
 </script>
 </body>
 </html>
