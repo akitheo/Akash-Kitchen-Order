@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Akash's Kitchen</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    h1, h2 { text-align: center; }
+    .menu-section { margin-bottom: 20px; }
+    .menu-item { margin: 5px 0; }
+    button { padding: 5px 10px; margin-left: 10px; }
+    #cart { border-top: 1px solid #ccc; padding-top: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Akash's Kitchen 🍛</h1>
+
+  <div class="menu-section">
+    <h2>Combo Menu</h2>
+    <div id="combo-menu"></div>
+  </div>
+
+  <div class="menu-section">
+    <h2>Individual Items</h2>
+    <div id="individual-menu"></div>
+  </div>
+
+  <div class="menu-section">
+    <h2>Drinks</h2>
+    <div id="drinks-menu"></div>
+  </div>
+
+  <div id="cart">
+    <h2>Cart</h2>
+    <div id="cart-items">No items added yet.</div>
+    <div id="cart-total"></div>
+    <button onclick="placeOrder()">Place Order</button>
+  </div>
+
+  <script>
+    // Menu Data
+    const menu = {
+      combo: [
+        { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
+        { id: "C002", name: "Roti + 2 Veg + Chicken (3 pcs)", price: 150 }
+      ],
+      individual: [
+        { id: "I001", name: "Roti (per piece)", price: 10 },
+        { id: "I002", name: "Rice (1 cup)", price: 15 },
+        { id: "I003", name: "Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price: 200 },
+        { id: "I004", name: "Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price: 350 }
+      ],
+      drinks: [
+        { id: "D001", name: "Indian Welcome Drink (Lemon + Salt + Sugar)", price: 40 },
+        { id: "D002", name: "Coca Cola", price: 25 }
+      ]
+    };
+
+    let cart = [];
+
+    // Display Menu Items
+    function displayMenu(sectionId, items) {
+      const div = document.getElementById(sectionId);
+      items.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "menu-item";
+        itemDiv.innerHTML = `
+          <strong>${item.name}</strong> - ${item.price} NTD
+          <button onclick="addToCart('${item.id}')">Add</button>
+        `;
+        div.appendChild(itemDiv);
+      });
+    }
+
+    displayMenu("combo-menu", menu.combo);
+    displayMenu("individual-menu", menu.individual);
+    displayMenu("drinks-menu", menu.drinks);
+
+    // Add Item to Cart
+    function addToCart(itemId) {
+      const item = menu.combo.concat(menu.individual, menu.drinks).find(i => i.id === itemId);
+      const cartItem = cart.find(i => i.id === itemId);
+      if (cartItem) {
+        cartItem.qty += 1;
+      } else {
+        cart.push({ ...item, qty: 1 });
+      }
+      displayCart();
+    }
+
+    // Display Cart
+    function displayCart() {
+      const cartItemsDiv = document.getElementById("cart-items");
+      const cartTotalDiv = document.getElementById("cart-total");
+
+      if (cart.length === 0) {
+        cartItemsDiv.innerHTML = "No items added yet.";
+        cartTotalDiv.innerHTML = "";
+        return;
+      }
+
+      cartItemsDiv.innerHTML = "";
+      cart.forEach(item => {
+        cartItemsDiv.innerHTML += `${item.name} x${item.qty} - ${item.qty * item.price} NTD<br>`;
+      });
+
+      const total = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
+      cartTotalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
+    }
+
+    // Place Order
+    function placeOrder() {
+      if (cart.length === 0) {
+        alert("Cart is empty!");
+        return;
+      }
+
+      const customerName = prompt("Enter your name:");
+      const mobile = prompt("Enter your mobile number:");
+
+      if (!customerName || !mobile) {
+        alert("Please enter name and mobile number!");
+        return;
+      }
+
+      const order = {
+        order_id: "ORD" + Date.now(),
+        customer_name: customerName,
+        mobile: mobile,
+        items: cart
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbzPd96bq-AaXB76KU4j8uDFgiRGl3MMmMj4W1rsmO4dfeUqKP8Hv5zkYQXswgt21HA/exec", {  // <--- Replace this with your Web App URL
+        method: "POST",
+        body: JSON.stringify(order)
+      })
+      .then(res => res.text())
+      .then(() => {
+        alert("Order placed successfully!");
+        cart = [];
+        displayCart();
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error sending order. Try again.");
+      });
+    }
+  </script>
+</body>
+</html>
