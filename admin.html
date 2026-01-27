@@ -1,24 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Akash's Kitchen - Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🍽️ Akash's Kitchen – Orders</title>
   <style>
-    body { font-family: Arial; padding: 15px; }
-    h1 { text-align: center; }
+    body { font-family: Arial; margin: 20px; }
     .order {
       border: 1px solid #ccc;
       padding: 10px;
       margin-bottom: 10px;
-      border-radius: 6px;
     }
     button {
+      margin-right: 10px;
       padding: 6px 10px;
-      margin: 5px 5px 0 0;
     }
   </style>
 </head>
-
 <body>
 
 <h1>🍽️ Akash's Kitchen – Orders</h1>
@@ -27,6 +23,7 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
 
+/******** FETCH ORDERS ********/
 function loadOrders() {
   fetch(API_URL)
     .then(res => res.json())
@@ -34,30 +31,55 @@ function loadOrders() {
       const div = document.getElementById("orders");
       div.innerHTML = "";
 
-      data.reverse().forEach(o => {
+      if (data.length === 0) {
+        div.innerHTML = "No orders yet.";
+        return;
+      }
+
+      data.forEach(order => {
         div.innerHTML += `
           <div class="order">
-            <strong>Order ID:</strong> ${o.orderId}<br>
-            <strong>Name:</strong> ${o.name}<br>
-            <strong>Items:</strong> ${o.items}<br>
-            <strong>Total:</strong> ${o.total} NTD<br>
-            <strong>Status:</strong> ${o.status}<br>
-            <button onclick="updateStatus('${o.orderId}','PREPARING')">PREPARING</button>
-            <button onclick="updateStatus('${o.orderId}','READY')">READY</button>
-            <button onclick="updateStatus('${o.orderId}','PAID')">PAID</button>
+            <strong>Order ID:</strong> ${order.orderId}<br>
+            <strong>Name:</strong> ${order.name}<br>
+            <strong>Items:</strong> ${order.items}<br>
+            <strong>Total:</strong> ${order.total} NTD<br>
+            <strong>Status:</strong> ${order.status}<br><br>
+
+            <button onclick="updateStatus('${order.orderId}', 'PREPARING')">
+              PREPARING
+            </button>
+
+            <button onclick="updateStatus('${order.orderId}', 'PAID')">
+              PAID
+            </button>
+
+            <button onclick="updateStatus('${order.orderId}', 'READY')">
+              READY
+            </button>
           </div>
         `;
       });
+    })
+    .catch(err => {
+      document.getElementById("orders").innerHTML = "Error loading orders";
+      console.error(err);
     });
 }
 
+/******** UPDATE STATUS ********/
 function updateStatus(orderId, status) {
-  fetch(API_URL + "?orderId=" + orderId + "&newStatus=" + status)
-    .then(() => loadOrders());
+  fetch(`${API_URL}?action=update&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(status)}`)
+    .then(res => res.json())
+    .then(() => {
+      loadOrders(); // refresh UI
+    })
+    .catch(err => {
+      alert("Failed to update status");
+      console.error(err);
+    });
 }
 
 loadOrders();
-setInterval(loadOrders, 5000);
 </script>
 
 </body>
