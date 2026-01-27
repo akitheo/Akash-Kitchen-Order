@@ -2,148 +2,176 @@
 <html>
 <head>
   <title>Akash's Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial; margin: 20px; }
     h1, h2 { text-align: center; }
     .menu-section { margin-bottom: 20px; }
-    .menu-item { margin: 5px 0; }
-    button { padding: 5px 10px; margin-left: 10px; }
-    #cart { border-top: 1px solid #ccc; padding-top: 10px; margin-top: 20px; }
+    .menu-item { margin: 8px 0; }
+    button { padding: 6px 12px; margin-left: 10px; }
+    #cart, #receipt {
+      border-top: 2px solid #ccc;
+      padding-top: 10px;
+      margin-top: 20px;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Akash's Kitchen 🍛</h1>
 
-  <div class="menu-section">
-    <h2>Combo Menu</h2>
-    <div id="combo-menu"></div>
-  </div>
+<h1>Akash's Kitchen 🍛</h1>
 
-  <div class="menu-section">
-    <h2>Individual Items</h2>
-    <div id="individual-menu"></div>
-  </div>
+<!-- MENU -->
+<div class="menu-section">
+  <h2>Combo Menu</h2>
+  <div id="combo-menu"></div>
+</div>
 
-  <div class="menu-section">
-    <h2>Drinks</h2>
-    <div id="drinks-menu"></div>
-  </div>
+<div class="menu-section">
+  <h2>Individual Items</h2>
+  <div id="individual-menu"></div>
+</div>
 
-  <div id="cart">
-    <h2>Cart</h2>
-    <div id="cart-items">No items added yet.</div>
-    <div id="cart-total"></div>
-    <button onclick="placeOrder()">Place Order</button>
-  </div>
+<div class="menu-section">
+  <h2>Drinks</h2>
+  <div id="drinks-menu"></div>
+</div>
 
-  <script>
-    // Menu Data
-    const menu = {
-      combo: [
-        { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
-        { id: "C002", name: "Roti + 2 Veg + Chicken (3 pcs)", price: 150 }
-      ],
-      individual: [
-        { id: "I001", name: "Roti (per piece)", price: 10 },
-        { id: "I002", name: "Rice (1 cup)", price: 15 },
-        { id: "I003", name: "Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price: 200 },
-        { id: "I004", name: "Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price: 350 }
-      ],
-      drinks: [
-        { id: "D001", name: "Indian Welcome Drink (Lemon + Salt + Sugar)", price: 40 },
-        { id: "D002", name: "Coca Cola", price: 25 }
-      ]
-    };
+<!-- CART -->
+<div id="cart">
+  <h2>🛒 Cart</h2>
+  <div id="cart-items">No items added yet.</div>
+  <div id="cart-total"></div>
+  <button onclick="placeOrder()">Place Order</button>
+</div>
 
-    let cart = [];
+<!-- RECEIPT -->
+<div id="receipt" style="display:none;">
+  <h2>🧾 Order Receipt</h2>
+  <p><strong>Order ID:</strong> <span id="r-order-id"></span></p>
+  <p><strong>Name:</strong> <span id="r-name"></span></p>
+  <p><strong>Mobile:</strong> <span id="r-mobile"></span></p>
+  <div id="r-items"></div>
+  <h3>Total: <span id="r-total"></span> NTD</h3>
+  <p style="color:green;"><strong>Please show this receipt at the cashier to pay.</strong></p>
+</div>
 
-    // Display Menu Items
-    function displayMenu(sectionId, items) {
-      const div = document.getElementById(sectionId);
-      items.forEach(item => {
-        const itemDiv = document.createElement("div");
-        itemDiv.className = "menu-item";
-        itemDiv.innerHTML = `
-          <strong>${item.name}</strong> - ${item.price} NTD
-          <button onclick="addToCart('${item.id}')">Add</button>
-        `;
-        div.appendChild(itemDiv);
-      });
-    }
+<script>
+/* MENU DATA */
+const menu = {
+  combo: [
+    { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
+    { id: "C002", name: "Roti + 2 Veg + Chicken (3 pcs)", price: 150 }
+  ],
+  individual: [
+    { id: "I001", name: "Roti (per piece)", price: 10 },
+    { id: "I002", name: "Rice (1 cup)", price: 15 },
+    { id: "I003", name: "Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price: 200 },
+    { id: "I004", name: "Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price: 350 }
+  ],
+  drinks: [
+    { id: "D001", name: "Indian Welcome Drink (Lemon + Salt + Sugar)", price: 40 },
+    { id: "D002", name: "Coca Cola", price: 25 }
+  ]
+};
 
-    displayMenu("combo-menu", menu.combo);
-    displayMenu("individual-menu", menu.individual);
-    displayMenu("drinks-menu", menu.drinks);
+let cart = [];
 
-    // Add Item to Cart
-    function addToCart(itemId) {
-      const item = menu.combo.concat(menu.individual, menu.drinks).find(i => i.id === itemId);
-      const cartItem = cart.find(i => i.id === itemId);
-      if (cartItem) {
-        cartItem.qty += 1;
-      } else {
-        cart.push({ ...item, qty: 1 });
-      }
-      displayCart();
-    }
+/* DISPLAY MENU */
+function displayMenu(sectionId, items) {
+  const div = document.getElementById(sectionId);
+  items.forEach(item => {
+    const d = document.createElement("div");
+    d.className = "menu-item";
+    d.innerHTML = `<strong>${item.name}</strong> - ${item.price} NTD
+      <button onclick="addToCart('${item.id}')">Add</button>`;
+    div.appendChild(d);
+  });
+}
 
-    // Display Cart
-    function displayCart() {
-      const cartItemsDiv = document.getElementById("cart-items");
-      const cartTotalDiv = document.getElementById("cart-total");
+displayMenu("combo-menu", menu.combo);
+displayMenu("individual-menu", menu.individual);
+displayMenu("drinks-menu", menu.drinks);
 
-      if (cart.length === 0) {
-        cartItemsDiv.innerHTML = "No items added yet.";
-        cartTotalDiv.innerHTML = "";
-        return;
-      }
+/* ADD TO CART */
+function addToCart(itemId) {
+  const item = [...menu.combo, ...menu.individual, ...menu.drinks].find(i => i.id === itemId);
+  const existing = cart.find(i => i.id === itemId);
+  if (existing) existing.qty++;
+  else cart.push({ ...item, qty: 1 });
+  displayCart();
+}
 
-      cartItemsDiv.innerHTML = "";
-      cart.forEach(item => {
-        cartItemsDiv.innerHTML += `${item.name} x${item.qty} - ${item.qty * item.price} NTD<br>`;
-      });
+/* DISPLAY CART */
+function displayCart() {
+  const itemsDiv = document.getElementById("cart-items");
+  const totalDiv = document.getElementById("cart-total");
 
-      const total = cart.reduce((sum, item) => sum + item.qty * item.price, 0);
-      cartTotalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
-    }
+  if (cart.length === 0) {
+    itemsDiv.innerHTML = "No items added yet.";
+    totalDiv.innerHTML = "";
+    return;
+  }
 
-    // Place Order
-    function placeOrder() {
-      if (cart.length === 0) {
-        alert("Cart is empty!");
-        return;
-      }
+  let total = 0;
+  itemsDiv.innerHTML = "";
+  cart.forEach(i => {
+    total += i.qty * i.price;
+    itemsDiv.innerHTML += `${i.name} x${i.qty} = ${i.qty * i.price} NTD<br>`;
+  });
 
-      const customerName = prompt("Enter your name:");
-      const mobile = prompt("Enter your mobile number:");
+  totalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
+}
 
-      if (!customerName || !mobile) {
-        alert("Please enter name and mobile number!");
-        return;
-      }
+/* PLACE ORDER */
+function placeOrder() {
+  if (cart.length === 0) return alert("Cart is empty!");
 
-      const order = {
-        order_id: "ORD" + Date.now(),
-        customer_name: customerName,
-        mobile: mobile,
-        items: cart
-      };
+  const name = prompt("Enter your name:");
+  const mobile = prompt("Enter your mobile number:");
+  if (!name || !mobile) return alert("Details required");
 
-      fetch("https://script.google.com/macros/s/AKfycbyKj7QLlD-dtXZ9SWKV-vIhrdUlKkAJjxxxJePLSpqIbsyh8A18qkCB035B9SLmavE/exec", {  // <--- Replace this with your Web App URL
-        method: "POST",
-        body: JSON.stringify(order)
-      })
-      .then(res => res.text())
-      .then(() => {
-        alert("Order placed successfully!");
-        cart = [];
-        displayCart();
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Error sending order. Try again.");
-      });
-    }
-  </script>
+  const orderId = "ORD" + Date.now();
+
+  const order = {
+    order_id: orderId,
+    customer_name: name,
+    mobile: mobile,
+    items: cart
+  };
+
+  fetch("https://script.google.com/macros/s/AKfycbyKj7QLlD-dtXZ9SWKV-vIhrdUlKkAJjxxxJePLSpqIbsyh8A18qkCB035B9SLmavE/exec", {
+    method: "POST",
+    body: JSON.stringify(order)
+  })
+  .then(() => {
+    showReceipt(orderId, name, mobile, cart);
+    cart = [];
+    displayCart();
+  })
+  .catch(() => alert("Order failed"));
+}
+
+/* SHOW RECEIPT */
+function showReceipt(orderId, name, mobile, items) {
+  document.getElementById("receipt").style.display = "block";
+  document.getElementById("r-order-id").innerText = orderId;
+  document.getElementById("r-name").innerText = name;
+  document.getElementById("r-mobile").innerText = mobile;
+
+  let total = 0;
+  const itemsDiv = document.getElementById("r-items");
+  itemsDiv.innerHTML = "<strong>Items:</strong><br>";
+
+  items.forEach(i => {
+    const t = i.qty * i.price;
+    total += t;
+    itemsDiv.innerHTML += `${i.name} x${i.qty} = ${t} NTD<br>`;
+  });
+
+  document.getElementById("r-total").innerText = total;
+}
+</script>
+
 </body>
 </html>
