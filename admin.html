@@ -1,85 +1,99 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🍽️ Akash's Kitchen – Orders</title>
+  <meta charset="UTF-8">
+  <title>🍽️ Akash's Kitchen – Admin Orders</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    .order {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
+    body { font-family: Arial, sans-serif; margin: 20px; background:#f8f8f8; }
+    h1 { text-align: center; }
+    .order { 
+      border: 1px solid #ccc; 
+      padding: 15px; 
+      margin-bottom: 15px; 
+      background: #fff; 
+      border-radius: 8px;
     }
+    .order strong { color: #333; }
     button {
-      margin-right: 10px;
-      padding: 6px 10px;
+      padding: 6px 12px; 
+      margin-right: 5px; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      color: #fff;
     }
+    button.preparing { background: orange; }
+    button.ready { background: green; }
+    button.paid { background: blue; }
   </style>
 </head>
 <body>
 
 <h1>🍽️ Akash's Kitchen – Orders</h1>
+
 <div id="orders">Loading...</div>
 
 <script>
+// 🔹 UPDATE THIS WITH YOUR CURRENT WEB APP URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
 
-/******** FETCH ORDERS ********/
-function loadOrders() {
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(data => {
-      const div = document.getElementById("orders");
-      div.innerHTML = "";
+// Load orders from Google Sheet
+async function loadOrders() {
+  try {
+    const res = await fetch(API_URL);
+    const orders = await res.json();
 
-      if (data.length === 0) {
-        div.innerHTML = "No orders yet.";
-        return;
-      }
+    const div = document.getElementById("orders");
+    div.innerHTML = "";
 
-      data.forEach(order => {
-        div.innerHTML += `
-          <div class="order">
-            <strong>Order ID:</strong> ${order.orderId}<br>
-            <strong>Name:</strong> ${order.name}<br>
-            <strong>Items:</strong> ${order.items}<br>
-            <strong>Total:</strong> ${order.total} NTD<br>
-            <strong>Status:</strong> ${order.status}<br><br>
+    if (!orders || orders.length === 0) {
+      div.innerHTML = "<p>No orders yet.</p>";
+      return;
+    }
 
-            <button onclick="updateStatus('${order.orderId}', 'PREPARING')">
-              PREPARING
-            </button>
+    orders.forEach(order => {
+      div.innerHTML += `
+        <div class="order">
+          <p><strong>Order ID:</strong> ${order.orderId}</p>
+          <p><strong>Name:</strong> ${order.name}</p>
+          <p><strong>Items:</strong> ${order.items}</p>
+          <p><strong>Total:</strong> ${order.total} NTD</p>
+          <p><strong>Status:</strong> <span id="status-${order.orderId}">${order.status}</span></p>
 
-            <button onclick="updateStatus('${order.orderId}', 'PAID')">
-              PAID
-            </button>
-
-            <button onclick="updateStatus('${order.orderId}', 'READY')">
-              READY
-            </button>
-          </div>
-        `;
-      });
-    })
-    .catch(err => {
-      document.getElementById("orders").innerHTML = "Error loading orders";
-      console.error(err);
+          <button class="preparing" onclick="updateStatus('${order.orderId}','PREPARING')">PREPARING</button>
+          <button class="ready" onclick="updateStatus('${order.orderId}','READY')">READY</button>
+          <button class="paid" onclick="updateStatus('${order.orderId}','PAID')">PAID</button>
+        </div>
+      `;
     });
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById("orders").innerHTML = "<p>Error loading orders</p>";
+  }
 }
 
-/******** UPDATE STATUS ********/
-function updateStatus(orderId, status) {
-  fetch(`${API_URL}?action=update&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(status)}`)
-    .then(res => res.json())
-    .then(() => {
-      loadOrders(); // refresh UI
-    })
-    .catch(err => {
-      alert("Failed to update status");
-      console.error(err);
-    });
+// Update status for a specific order
+async function updateStatus(orderId, status) {
+  try {
+    const url = `${API_URL}?action=update&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(status)}`;
+    const res = await fetch(url);
+    const result = await res.json();
+
+    if (result.result === "UPDATED") {
+      document.getElementById(`status-${orderId}`).innerText = status;
+    } else {
+      alert("Failed to update order status");
+    }
+  } catch(err) {
+    console.error(err);
+    alert("Error updating status");
+  }
 }
 
+// Load orders on page load and refresh every 5 seconds
 loadOrders();
+setInterval(loadOrders, 5000);
 </script>
 
 </body>
