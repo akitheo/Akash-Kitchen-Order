@@ -10,7 +10,7 @@
     .menu-item { margin: 8px 0; }
     button { padding: 6px 12px; margin-left: 10px; cursor:pointer; }
     #cart, #receipt { border-top: 2px solid #ccc; padding: 15px; margin-top: 20px; background:#fff; border-radius:8px;}
-    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; display:block; }
+    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; }
     table { width:100%; border-collapse: collapse; margin-top:10px;}
     th, td { border:1px solid #333; padding:5px; text-align:left;}
   </style>
@@ -58,16 +58,14 @@
 <!-- PDF Download Button -->
 <button id="download-pdf" onclick="downloadPDF()">Download PDF</button>
 
-<!-- jsPDF Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* MENU DATA */
 const menu = {
   combo: [
-    { id: "C001", name: "Rice + 2 Veg item + Chicken (3 pcs)", price: 150 },
-    { id: "C002", name: "Roti + 2 Veg item + Chicken (3 pcs)", price: 150 }
+    { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
+    { id: "C002", name: "Roti + 2 Veg + Chicken (3 pcs)", price: 150 }
   ],
   individual: [
     { id: "I001", name: "Roti (per piece)", price: 10 },
@@ -83,7 +81,6 @@ const menu = {
 
 let cart = [];
 
-/* DISPLAY MENU */
 function displayMenu(sectionId, items) {
   const div = document.getElementById(sectionId);
   items.forEach(item => {
@@ -99,7 +96,6 @@ displayMenu("combo-menu", menu.combo);
 displayMenu("individual-menu", menu.individual);
 displayMenu("drinks-menu", menu.drinks);
 
-/* ADD TO CART */
 function addToCart(itemId) {
   const item = [...menu.combo, ...menu.individual, ...menu.drinks].find(i => i.id === itemId);
   const existing = cart.find(i => i.id === itemId);
@@ -108,7 +104,6 @@ function addToCart(itemId) {
   displayCart();
 }
 
-/* DISPLAY CART */
 function displayCart() {
   const itemsDiv = document.getElementById("cart-items");
   const totalDiv = document.getElementById("cart-total");
@@ -127,7 +122,6 @@ function displayCart() {
   totalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
 }
 
-/* PLACE ORDER */
 function placeOrder() {
   if (cart.length === 0) return alert("Cart is empty!");
   const name = prompt("Enter your name:");
@@ -137,7 +131,6 @@ function placeOrder() {
   const orderId = "ORD" + Date.now();
   const order = { order_id: orderId, customer_name: name, mobile: mobile, items: cart };
 
-  // PUSH ORDER TO GOOGLE SHEET
   fetch("https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec", {
     method: "POST",
     body: JSON.stringify(order)
@@ -150,7 +143,6 @@ function placeOrder() {
   .catch(() => alert("Order failed"));
 }
 
-/* SHOW RECEIPT */
 function showReceipt(orderId, name, mobile, items) {
   document.getElementById("receipt").style.display = "block";
   document.getElementById("r-order-id").innerText = orderId;
@@ -181,20 +173,16 @@ function showReceipt(orderId, name, mobile, items) {
   document.getElementById("download-pdf").style.display = "block";
 }
 
-/* DOWNLOAD PDF */
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
   const orderId = document.getElementById("r-order-id").innerText;
   const name = document.getElementById("r-name").innerText;
   const mobile = document.getElementById("r-mobile").innerText;
   const total = document.getElementById("r-total").innerText;
   const date = new Date().toLocaleString();
-
   let y = 15;
 
-  // HEADER
   doc.setFontSize(18);
   doc.setTextColor(180, 60, 40);
   doc.text("Akash's Kitchen", 105, y, null, null, "center");
@@ -207,12 +195,8 @@ function downloadPDF() {
   doc.text(`Customer Name: ${name}`, 10, y); y += 6;
   doc.text(`Mobile: ${mobile}`, 10, y); y += 10;
 
-  // ITEMS TABLE
-  const tableData = Array.from(
-    document.querySelectorAll("#r-items table tr")
-  ).slice(1).map(row =>
-    Array.from(row.cells).map(cell => cell.innerText)
-  );
+  const tableData = Array.from(document.querySelectorAll("#r-items table tr"))
+    .slice(1).map(row => Array.from(row.cells).map(cell => cell.innerText));
 
   doc.autoTable({
     startY: y,
@@ -226,8 +210,6 @@ function downloadPDF() {
   });
 
   y = doc.lastAutoTable.finalY + 10;
-
-  // TOTAL & SIGNATURE
   doc.setFontSize(14);
   doc.setTextColor(0, 120, 0);
   doc.text(`Grand Total: ${total} NTD`, 10, y);
