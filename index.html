@@ -58,9 +58,6 @@
 <!-- PDF Download Button -->
 <button id="download-pdf" onclick="downloadPDF()">Download PDF</button>
 
-<!-- LOGO IMAGE -->
-<img id="logo" src="https://i.imgur.com/8Km9tLL.png" style="display:none;">
-
 <!-- jsPDF Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -197,12 +194,12 @@ function downloadPDF() {
 
   let y = 15;
 
-  /* LOGO */
-  const img = document.getElementById("logo");
-  doc.addImage(img, "PNG", 85, y, 40, 20);
+  // LOGO as Base64
+  const imgBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAB+Wn6qAAAACXBIWXMAAAsTAAALEwEAmpwYAAABJ0lEQVR4nO2WTQrCMAxFJwM/+fR2QmD7zTkGZt0kIocCKGRJx0r+tfpNIG53YNM7Z/cy5iyr+RRVYI8B1MAsVtR6Vh8eRjSgwgOpY8e1fX2LTPMJ+oLCApBJC30fAViY4TTMoqkGkT5OmCZt8+QbIdV7K1IgYJcC6TQnSA0TjXlBCg4WQQGJGf3B2z0MV8sPQ3w/GB5pFyD9U6zEKwWACf9M8f1bAyJQZwJHo9HyKZxTDZw78gKPM48qK6V2MMnG3K2L4wHnvbqIY28Vx3S0KpJ0Edt+S9vONhBdcphLqssDvwU7/w8XQpYqJ6f7H5vymrFAAAAAElFTkSuQmCC";
+  doc.addImage(imgBase64, "PNG", 85, y, 40, 20);
   y += 30;
 
-  /* HEADER */
+  // HEADER
   doc.setFontSize(18);
   doc.setTextColor(180, 60, 40);
   doc.text("Akash's Kitchen", 105, y, null, null, "center");
@@ -214,15 +211,15 @@ function downloadPDF() {
   y += 5;
   doc.text("Hope you will enjoy your food.", 105, y, null, null, "center");
   y += 5;
-  doc.text("Visit again 🙏", 105, y, null, null, "center");
+  doc.text("Visit again", 105, y, null, null, "center");
   y += 10;
 
-  /* LINE */
+  // LINE
   doc.setDrawColor(200);
   doc.line(10, y, 200, y);
   y += 8;
 
-  /* ORDER INFO */
+  // ORDER INFO
   doc.setFontSize(11);
   doc.text(`Date & Time: ${date}`, 10, y);
   y += 6;
@@ -233,7 +230,7 @@ function downloadPDF() {
   doc.text(`Mobile: ${mobile}`, 10, y);
   y += 10;
 
-  /* ITEMS TABLE */
+  // ITEMS TABLE
   const tableData = Array.from(
     document.querySelectorAll("#r-items table tr")
   ).slice(1).map(row =>
@@ -244,15 +241,16 @@ function downloadPDF() {
     startY: y,
     head: [['Item', 'Qty', 'Price (NTD)', 'Total (NTD)']],
     body: tableData,
-    theme: 'grid',
+    theme: 'striped',
     headStyles: { fillColor: [180, 60, 40], textColor: 255, halign: 'center' },
     bodyStyles: { halign: 'left' },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
     styles: { fontSize: 10 }
   });
 
   y = doc.lastAutoTable.finalY + 10;
 
-  /* TOTAL & SIGNATURE */
+  // TOTAL & SIGNATURE
   doc.setFontSize(14);
   doc.setTextColor(0, 120, 0);
   doc.text(`Grand Total: ${total} NTD`, 10, y);
