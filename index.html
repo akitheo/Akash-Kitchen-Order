@@ -10,7 +10,7 @@
     .menu-item { margin: 8px 0; }
     button { padding: 6px 12px; margin-left: 10px; cursor:pointer; }
     #cart, #receipt { border-top: 2px solid #ccc; padding: 15px; margin-top: 20px; background:#fff; border-radius:8px;}
-    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; }
+    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; display:block; }
     table { width:100%; border-collapse: collapse; margin-top:10px;}
     th, td { border:1px solid #333; padding:5px; text-align:left;}
   </style>
@@ -66,8 +66,8 @@
 /* MENU DATA */
 const menu = {
   combo: [
-    { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
-    { id: "C002", name: "Roti + 2 Veg + Chicken (3 pcs)", price: 150 }
+    { id: "C001", name: "Rice + 2 Veg item + Chicken (3 pcs)", price: 150 },
+    { id: "C002", name: "Roti + 2 Veg item + Chicken (3 pcs)", price: 150 }
   ],
   individual: [
     { id: "I001", name: "Roti (per piece)", price: 10 },
@@ -194,41 +194,18 @@ function downloadPDF() {
 
   let y = 15;
 
-  // LOGO as Base64
-  const imgBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAB+Wn6qAAAACXBIWXMAAAsTAAALEwEAmpwYAAABJ0lEQVR4nO2WTQrCMAxFJwM/+fR2QmD7zTkGZt0kIocCKGRJx0r+tfpNIG53YNM7Z/cy5iyr+RRVYI8B1MAsVtR6Vh8eRjSgwgOpY8e1fX2LTPMJ+oLCApBJC30fAViY4TTMoqkGkT5OmCZt8+QbIdV7K1IgYJcC6TQnSA0TjXlBCg4WQQGJGf3B2z0MV8sPQ3w/GB5pFyD9U6zEKwWACf9M8f1bAyJQZwJHo9HyKZxTDZw78gKPM48qK6V2MMnG3K2L4wHnvbqIY28Vx3S0KpJ0Edt+S9vONhBdcphLqssDvwU7/w8XQpYqJ6f7H5vymrFAAAAAElFTkSuQmCC";
-  doc.addImage(imgBase64, "PNG", 85, y, 40, 20);
-  y += 30;
-
   // HEADER
   doc.setFontSize(18);
   doc.setTextColor(180, 60, 40);
   doc.text("Akash's Kitchen", 105, y, null, null, "center");
-  y += 8;
+  y += 10;
 
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  doc.text("Thanks for coming today!", 105, y, null, null, "center");
-  y += 5;
-  doc.text("Hope you will enjoy your food.", 105, y, null, null, "center");
-  y += 5;
-  doc.text("Visit again", 105, y, null, null, "center");
-  y += 10;
-
-  // LINE
-  doc.setDrawColor(200);
-  doc.line(10, y, 200, y);
-  y += 8;
-
-  // ORDER INFO
-  doc.setFontSize(11);
-  doc.text(`Date & Time: ${date}`, 10, y);
-  y += 6;
-  doc.text(`Order ID: ${orderId}`, 10, y);
-  y += 6;
-  doc.text(`Customer Name: ${name}`, 10, y);
-  y += 6;
-  doc.text(`Mobile: ${mobile}`, 10, y);
-  y += 10;
+  doc.text(`Date & Time: ${date}`, 10, y); y += 6;
+  doc.text(`Order ID: ${orderId}`, 10, y); y += 6;
+  doc.text(`Customer Name: ${name}`, 10, y); y += 6;
+  doc.text(`Mobile: ${mobile}`, 10, y); y += 10;
 
   // ITEMS TABLE
   const tableData = Array.from(
