@@ -1,5 +1,3 @@
-<!-- ✅ FIXED + WORKING VERSION (PDF DOWNLOAD ISSUE SOLVED) -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,17 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    body { font-family: Arial; margin: 20px; background:#f4f4f4; }
+    body { font-family: Arial; margin:20px; background:#f4f4f4; }
     h1, h2 { text-align:center; color:#b23a2f; }
     .menu-section, #cart, #receipt {
       background:#fff; padding:15px; margin-bottom:20px; border-radius:8px;
     }
-    .menu-item { display:flex; justify-content:space-between; margin:8px 0; }
+    .menu-item {
+      display:flex; justify-content:space-between; margin:8px 0;
+    }
     button {
       background:#b23a2f; color:#fff; border:none;
       padding:6px 12px; border-radius:4px; cursor:pointer;
     }
-    #download-pdf { display:none; margin:auto; padding:10px 20px; }
+    #download-pdf { display:none; margin:15px auto; padding:10px 20px; }
     table { width:100%; border-collapse:collapse; margin-top:10px; }
     th, td { border:1px solid #333; padding:6px; }
     th { background:#b23a2f; color:white; }
@@ -60,30 +60,36 @@
   <p><b>Mobile:</b> <span id="r-mobile"></span></p>
   <div id="r-items"></div>
   <h3>Total: <span id="r-total"></span> NTD</h3>
+  <p style="color:green"><b>Please show this receipt at the cashier.</b></p>
 </div>
 
 <button id="download-pdf" onclick="downloadPDF()">⬇ Download Receipt PDF</button>
 
-<!-- LIBRARIES (ORDER IS IMPORTANT) -->
+<!-- LIBRARIES -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* MENU DATA */
+/* 🔹 FULL MENU (UNCHANGED) */
 const menu = {
   combo: [
-    { id:"C001", name:"Rice + 2 Veg + Chicken", price:150 }
+    { id:"C001", name:"Rice + 2 Veg + Chicken", price:150 },
+    { id:"C002", name:"Roti + 2 Veg + Chicken (3 pcs)", price:150 }
   ],
   individual: [
-    { id:"I001", name:"Roti", price:10 },
-    { id:"I002", name:"Rice", price:15 }
+    { id:"I001", name:"Roti (per piece)", price:10 },
+    { id:"I002", name:"Rice (1 cup)", price:15 },
+    { id:"I003", name:"Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price:200 },
+    { id:"I004", name:"Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price:350 }
   ],
   drinks: [
-    { id:"D001", name:"Coca Cola", price:25 }
+    { id:"D001", name:"Indian Welcome Drink (Lemon + Salt + Sugar)", price:40 },
+    { id:"D002", name:"Coca Cola", price:25 }
   ]
 };
 
 let cart = [];
+const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
 
 /* DISPLAY MENU */
 function displayMenu(id, items) {
@@ -110,29 +116,45 @@ function addToCart(id) {
 function renderCart() {
   let html="", total=0;
   cart.forEach(i=>{
-    total += i.qty*i.price;
-    html += `${i.name} x${i.qty} = ${i.qty*i.price} NTD<br>`;
+    total+=i.qty*i.price;
+    html+=`${i.name} x${i.qty} = ${i.qty*i.price} NTD<br>`;
   });
   document.getElementById("cart-items").innerHTML = html || "No items added yet.";
   document.getElementById("cart-total").innerHTML = `<b>Total: ${total} NTD</b>`;
 }
 
-/* PLACE ORDER */
+/* PLACE ORDER → GOOGLE SHEET */
 function placeOrder() {
   if (!cart.length) return alert("Cart empty");
   const name = prompt("Name:");
   const mobile = prompt("Mobile:");
   if (!name || !mobile) return;
 
-  const id = "ORD"+Date.now();
-  showReceipt(id, name, mobile, cart);
-  cart=[]; renderCart();
+  const orderId = "ORD" + Date.now();
+  const order = {
+    order_id: orderId,
+    customer_name: name,
+    mobile: mobile,
+    items: cart
+  };
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(order)
+  })
+  .then(() => {
+    showReceipt(orderId, name, mobile, cart);
+    cart = [];
+    renderCart();
+  })
+  .catch(() => alert("Order failed"));
 }
 
 /* RECEIPT */
 function showReceipt(id, name, mobile, items) {
   document.getElementById("receipt").style.display="block";
   document.getElementById("download-pdf").style.display="block";
+
   document.getElementById("r-order-id").innerText=id;
   document.getElementById("r-name").innerText=name;
   document.getElementById("r-mobile").innerText=mobile;
@@ -148,7 +170,7 @@ function showReceipt(id, name, mobile, items) {
   document.getElementById("r-total").innerText=total;
 }
 
-/* ✅ PDF DOWNLOAD – FIXED */
+/* PDF */
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -163,10 +185,10 @@ function downloadPDF() {
   doc.text("Hope you enjoy your food. Visit again 🙏",105,28,null,null,"center");
 
   doc.autoTable({
-    startY: 35,
-    html: "#r-items table",
-    theme: "grid",
-    headStyles: { fillColor:[178,58,47] }
+    startY:35,
+    html:"#r-items table",
+    theme:"grid",
+    headStyles:{ fillColor:[178,58,47] }
   });
 
   const total = document.getElementById("r-total").innerText;
