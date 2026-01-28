@@ -17,6 +17,7 @@
 </head>
 
 <body>
+<img id="logo" src="https://i.imgur.com/8Km9tLL.png" style="display:none;">
 
 <h1>🍛 Akash's Kitchen</h1>
 
@@ -183,6 +184,7 @@ function showReceipt(orderId, name, mobile, items) {
 }
 
 /* DOWNLOAD PDF WITH PROFESSIONAL FORMAT */
+<script>
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -191,49 +193,87 @@ function downloadPDF() {
   const name = document.getElementById("r-name").innerText;
   const mobile = document.getElementById("r-mobile").innerText;
   const total = document.getElementById("r-total").innerText;
-
-  // Current date/time
   const date = new Date().toLocaleString();
 
-  let y = 10;
-  doc.setFontSize(16);
-  doc.text("🍛 Akash's Kitchen", 105, y, null, null, "center");
-  y += 10;
-  doc.setFontSize(12);
-  doc.text("Thanks for coming today!", 105, y, null, null, "center");
-  y += 6;
-  doc.text("Hope you will enjoy your food!", 105, y, null, null, "center");
-  y += 6;
-  doc.text("Visit again!", 105, y, null, null, "center");
-  y += 10;
+  let y = 15;
 
-  doc.text(`Date: ${date}`, 10, y);
+  /* LOGO */
+  const img = document.getElementById("logo");
+  doc.addImage(img, "PNG", 85, y, 40, 20);
+  y += 30;
+
+  /* HEADER */
+  doc.setFontSize(18);
+  doc.setTextColor(180, 60, 40);
+  doc.text("Akash's Kitchen", 105, y, null, null, "center");
+
+  y += 8;
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text("Thanks for coming today!", 105, y, null, null, "center");
+  y += 5;
+  doc.text("Hope you will enjoy your food.", 105, y, null, null, "center");
+  y += 5;
+  doc.text("Visit again 🙏", 105, y, null, null, "center");
+
+  y += 10;
+  doc.setDrawColor(200);
+  doc.line(10, y, 200, y);
+  y += 8;
+
+  /* ORDER INFO */
+  doc.setFontSize(11);
+  doc.text(`Date & Time: ${date}`, 10, y);
   y += 6;
   doc.text(`Order ID: ${orderId}`, 10, y);
   y += 6;
   doc.text(`Customer Name: ${name}`, 10, y);
   y += 6;
   doc.text(`Mobile: ${mobile}`, 10, y);
-  y += 8;
 
-  // Table header
+  y += 10;
+
+  /* TABLE */
+  const tableData = Array.from(
+    document.querySelectorAll("#r-items table tr")
+  ).slice(1).map(row =>
+    Array.from(row.cells).map(cell => cell.innerText)
+  );
+
   doc.autoTable({
     startY: y,
-    head: [['Item', 'Qty', 'Price', 'Total']],
-    body: Array.from(document.querySelectorAll('#r-items table tr'))
-      .slice(1)
-      .map(row => Array.from(row.cells).map(cell => cell.innerText)),
+    head: [['Item', 'Qty', 'Price (NTD)', 'Total (NTD)']],
+    body: tableData,
     theme: 'grid',
-    headStyles: { fillColor: [230, 230, 230] },
+    headStyles: {
+      fillColor: [180, 60, 40],
+      textColor: 255,
+      halign: 'center'
+    },
+    bodyStyles: {
+      halign: 'left'
+    },
+    styles: {
+      fontSize: 10
+    }
   });
 
   y = doc.lastAutoTable.finalY + 10;
+
+  /* TOTAL */
   doc.setFontSize(14);
+  doc.setTextColor(0, 120, 0);
   doc.text(`Grand Total: ${total} NTD`, 10, y);
+
+  y += 12;
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text("Please show this receipt at the cashier to pay.", 105, y, null, null, "center");
 
   doc.save(`AkashKitchen_${orderId}.pdf`);
 }
 </script>
+
 
 <!-- Include jsPDF AutoTable plugin -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
