@@ -3,20 +3,83 @@
 <head>
   <title>Akash's Kitchen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { font-family: Arial; margin: 20px; background:#f9f9f9; }
-    h1, h2 { text-align: center; }
-    .menu-section { margin-bottom: 20px; }
-    .menu-item { margin: 8px 0; }
-    button { padding: 6px 12px; margin-left: 10px; cursor:pointer; }
-    #cart, #receipt { border-top: 2px solid #ccc; padding: 15px; margin-top: 20px; background:#fff; border-radius:8px;}
-    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; display:block; }
-    table { width:100%; border-collapse: collapse; margin-top:10px;}
-    th, td { border:1px solid #333; padding:5px; text-align:left;}
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f4f4;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #b23a2f;
+    }
+
+    .menu-section {
+      margin-bottom: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .menu-item {
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+      background: #b23a2f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #8f2f26;
+    }
+
+    #cart, #receipt {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    #download-pdf {
+      display: none;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 6px;
+      text-align: left;
+    }
+
+    th {
+      background: #b23a2f;
+      color: white;
+    }
   </style>
 </head>
 
 <body>
+
+<!-- Hidden logo for PDF -->
+<img id="logo" src="https://i.imgur.com/8Km9tLL.png" style="display:none;">
 
 <h1>🍛 Akash's Kitchen</h1>
 
@@ -41,6 +104,7 @@
   <h2>🛒 Cart</h2>
   <div id="cart-items">No items added yet.</div>
   <div id="cart-total"></div>
+  <br>
   <button onclick="placeOrder()">Place Order</button>
 </div>
 
@@ -55,11 +119,11 @@
   <p style="color:green;"><strong>Please show this receipt at the cashier to pay.</strong></p>
 </div>
 
-<!-- PDF Download Button -->
-<button id="download-pdf" onclick="downloadPDF()">Download PDF</button>
+<button id="download-pdf" onclick="downloadPDF()">⬇ Download Receipt PDF</button>
 
-<!-- jsPDF Library -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
 /* MENU DATA */
@@ -71,11 +135,11 @@ const menu = {
   individual: [
     { id: "I001", name: "Roti (per piece)", price: 10 },
     { id: "I002", name: "Rice (1 cup)", price: 15 },
-    { id: "I003", name: "Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price: 200 },
-    { id: "I004", name: "Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price: 350 }
+    { id: "I003", name: "Chicken Curry Bengali Home Style (4 pcs)", price: 200 },
+    { id: "I004", name: "Mutton Curry Bengali Home Style (6 pcs)", price: 350 }
   ],
   drinks: [
-    { id: "D001", name: "Indian Welcome Drink (Lemon + Salt + Sugar)", price: 40 },
+    { id: "D001", name: "Indian Welcome Drink", price: 40 },
     { id: "D002", name: "Coca Cola", price: 25 }
   ]
 };
@@ -88,8 +152,10 @@ function displayMenu(sectionId, items) {
   items.forEach(item => {
     const d = document.createElement("div");
     d.className = "menu-item";
-    d.innerHTML = `<strong>${item.name}</strong> - ${item.price} NTD
-      <button onclick="addToCart('${item.id}')">Add</button>`;
+    d.innerHTML = `
+      <span><strong>${item.name}</strong> - ${item.price} NTD</span>
+      <button onclick="addToCart('${item.id}')">Add</button>
+    `;
     div.appendChild(d);
   });
 }
@@ -99,9 +165,9 @@ displayMenu("individual-menu", menu.individual);
 displayMenu("drinks-menu", menu.drinks);
 
 /* ADD TO CART */
-function addToCart(itemId) {
-  const item = [...menu.combo, ...menu.individual, ...menu.drinks].find(i => i.id === itemId);
-  const existing = cart.find(i => i.id === itemId);
+function addToCart(id) {
+  const item = [...menu.combo, ...menu.individual, ...menu.drinks].find(i => i.id === id);
+  const existing = cart.find(i => i.id === id);
   if (existing) existing.qty++;
   else cart.push({ ...item, qty: 1 });
   displayCart();
@@ -113,16 +179,17 @@ function displayCart() {
   const totalDiv = document.getElementById("cart-total");
 
   if (cart.length === 0) {
-    itemsDiv.innerHTML = "No items added yet.";
-    totalDiv.innerHTML = "";
+    itemsDiv.innerText = "No items added yet.";
+    totalDiv.innerText = "";
     return;
   }
 
   let total = 0;
   itemsDiv.innerHTML = "";
   cart.forEach(i => {
-    total += i.qty * i.price;
-    itemsDiv.innerHTML += `${i.name} x${i.qty} = ${i.qty * i.price} NTD<br>`;
+    const t = i.qty * i.price;
+    total += t;
+    itemsDiv.innerHTML += `${i.name} x${i.qty} = ${t} NTD<br>`;
   });
 
   totalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
@@ -130,152 +197,94 @@ function displayCart() {
 
 /* PLACE ORDER */
 function placeOrder() {
-  if (cart.length === 0) return alert("Cart is empty!");
+  if (cart.length === 0) return alert("Cart is empty");
 
   const name = prompt("Enter your name:");
   const mobile = prompt("Enter your mobile number:");
   if (!name || !mobile) return alert("Details required");
 
   const orderId = "ORD" + Date.now();
-  const order = { order_id: orderId, customer_name: name, mobile: mobile, items: cart };
 
   fetch("https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec", {
     method: "POST",
-    body: JSON.stringify(order)
-  })
-  .then(() => {
+    body: JSON.stringify({
+      order_id: orderId,
+      customer_name: name,
+      mobile: mobile,
+      items: cart
+    })
+  }).then(() => {
     showReceipt(orderId, name, mobile, cart);
     cart = [];
     displayCart();
-  })
-  .catch(() => alert("Order failed"));
+  });
 }
 
 /* SHOW RECEIPT */
 function showReceipt(orderId, name, mobile, items) {
   document.getElementById("receipt").style.display = "block";
+  document.getElementById("download-pdf").style.display = "block";
+
   document.getElementById("r-order-id").innerText = orderId;
   document.getElementById("r-name").innerText = name;
   document.getElementById("r-mobile").innerText = mobile;
 
-  const itemsDiv = document.getElementById("r-items");
   let total = 0;
-  let tableHTML = `<table>
+  let html = `<table>
     <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>`;
-  
+
   items.forEach(i => {
     const t = i.qty * i.price;
     total += t;
-    tableHTML += `<tr>
+    html += `<tr>
       <td>${i.name}</td>
       <td>${i.qty}</td>
       <td>${i.price}</td>
       <td>${t}</td>
     </tr>`;
   });
-  tableHTML += "</table>";
-  itemsDiv.innerHTML = tableHTML;
 
+  html += "</table>";
+  document.getElementById("r-items").innerHTML = html;
   document.getElementById("r-total").innerText = total;
-
-  // Show PDF button
-  document.getElementById("download-pdf").style.display = "block";
 }
 
-/* DOWNLOAD PDF WITH PROFESSIONAL FORMAT */
-<script>
+/* DOWNLOAD PDF */
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
-  const orderId = document.getElementById("r-order-id").innerText;
-  const name = document.getElementById("r-name").innerText;
-  const mobile = document.getElementById("r-mobile").innerText;
-  const total = document.getElementById("r-total").innerText;
-  const date = new Date().toLocaleString();
-
   let y = 15;
 
-  /* LOGO */
   const img = document.getElementById("logo");
   doc.addImage(img, "PNG", 85, y, 40, 20);
   y += 30;
 
-  /* HEADER */
   doc.setFontSize(18);
-  doc.setTextColor(180, 60, 40);
+  doc.setTextColor(178, 58, 47);
   doc.text("Akash's Kitchen", 105, y, null, null, "center");
 
   y += 8;
   doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(0);
   doc.text("Thanks for coming today!", 105, y, null, null, "center");
   y += 5;
-  doc.text("Hope you will enjoy your food.", 105, y, null, null, "center");
-  y += 5;
-  doc.text("Visit again 🙏", 105, y, null, null, "center");
+  doc.text("Hope you will enjoy your food. Visit again 🙏", 105, y, null, null, "center");
 
-  y += 10;
-  doc.setDrawColor(200);
-  doc.line(10, y, 200, y);
-  y += 8;
-
-  /* ORDER INFO */
-  doc.setFontSize(11);
-  doc.text(`Date & Time: ${date}`, 10, y);
-  y += 6;
-  doc.text(`Order ID: ${orderId}`, 10, y);
-  y += 6;
-  doc.text(`Customer Name: ${name}`, 10, y);
-  y += 6;
-  doc.text(`Mobile: ${mobile}`, 10, y);
-
-  y += 10;
-
-  /* TABLE */
-  const tableData = Array.from(
-    document.querySelectorAll("#r-items table tr")
-  ).slice(1).map(row =>
-    Array.from(row.cells).map(cell => cell.innerText)
-  );
-
+  y += 12;
   doc.autoTable({
     startY: y,
-    head: [['Item', 'Qty', 'Price (NTD)', 'Total (NTD)']],
-    body: tableData,
-    theme: 'grid',
-    headStyles: {
-      fillColor: [180, 60, 40],
-      textColor: 255,
-      halign: 'center'
-    },
-    bodyStyles: {
-      halign: 'left'
-    },
-    styles: {
-      fontSize: 10
-    }
+    html: "#r-items table",
+    theme: "grid",
+    headStyles: { fillColor: [178, 58, 47] }
   });
 
   y = doc.lastAutoTable.finalY + 10;
-
-  /* TOTAL */
   doc.setFontSize(14);
-  doc.setTextColor(0, 120, 0);
-  doc.text(`Grand Total: ${total} NTD`, 10, y);
+  doc.text(`Grand Total: ${document.getElementById("r-total").innerText} NTD`, 10, y);
 
-  y += 12;
-  doc.setFontSize(10);
-  doc.setTextColor(120);
-  doc.text("Please show this receipt at the cashier to pay.", 105, y, null, null, "center");
-
-  doc.save(`AkashKitchen_${orderId}.pdf`);
+  doc.save(`AkashKitchen_${document.getElementById("r-order-id").innerText}.pdf`);
 }
 </script>
-
-
-<!-- Include jsPDF AutoTable plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 </body>
 </html>
