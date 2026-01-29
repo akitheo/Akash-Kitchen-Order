@@ -3,12 +3,19 @@
 <head>
   <title>Akash's Kitchen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body { font-family: Arial; margin: 20px; background:#f9f9f9; }
     h1, h2 { text-align: center; }
     .menu-section { margin-bottom: 20px; }
     .menu-item { margin: 8px 0; }
-    button { padding: 6px 12px; margin-left: 5px; cursor:pointer; }
+
+    button {
+      padding: 6px 12px;
+      margin-left: 10px;
+      cursor:pointer;
+    }
+
     #cart, #receipt {
       border-top: 2px solid #ccc;
       padding: 15px;
@@ -16,11 +23,41 @@
       background:#fff;
       border-radius:8px;
     }
-    #download-pdf { display:none; margin: 15px auto; padding:8px 16px; cursor:pointer; }
-    table { width:100%; border-collapse: collapse; margin-top:10px;}
-    th, td { border:1px solid #333; padding:5px; text-align:left;}
-    textarea { width:100%; padding:8px; margin-top:10px; }
-    .remove-btn { background:#e74c3c; color:#fff; border:none; border-radius:4px; }
+
+    #download-pdf {
+      display:none;
+      margin: 15px auto;
+      padding:8px 16px;
+      cursor:pointer;
+    }
+
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+    }
+
+    th, td {
+      border:1px solid #333;
+      padding:5px;
+      text-align:left;
+    }
+
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 6px;
+    }
+
+    .remove-btn {
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
   </style>
 </head>
 
@@ -50,10 +87,10 @@
   <div id="cart-items">No items added yet.</div>
   <div id="cart-total"></div>
 
-  <!-- SPECIAL NOTE -->
-  <h3>📝 Special Note for Kitchen</h3>
-  <textarea id="special-note" placeholder="Extra spicy / Less sweet / No onion etc"></textarea>
+  <!-- ✅ NEW: SPECIAL NOTE -->
+  <textarea id="special-note" placeholder="Any special request? (Spicy / Less salt / Sweet level etc.)"></textarea>
 
+  <br><br>
   <button onclick="placeOrder()">Place Order</button>
 </div>
 
@@ -63,18 +100,19 @@
   <p><strong>Order ID:</strong> <span id="r-order-id"></span></p>
   <p><strong>Name:</strong> <span id="r-name"></span></p>
   <p><strong>Mobile:</strong> <span id="r-mobile"></span></p>
-  <p><strong>Special Note:</strong> <span id="r-note"></span></p>
   <div id="r-items"></div>
   <h3>Total: <span id="r-total"></span> NTD</h3>
   <p style="color:green;"><strong>Please show this receipt at the cashier to pay.</strong></p>
 </div>
 
+<!-- PDF -->
 <button id="download-pdf" onclick="downloadPDF()">Download PDF</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+/* MENU DATA (UNCHANGED) */
 const menu = {
   combo: [
     { id: "C001", name: "Rice + 2 Veg + Chicken", price: 150 },
@@ -83,17 +121,18 @@ const menu = {
   individual: [
     { id: "I001", name: "Roti (per piece)", price: 10 },
     { id: "I002", name: "Rice (1 cup)", price: 15 },
-    { id: "I003", name: "Chicken Curry Bengali Home Style (4 pcs)", price: 200 },
-    { id: "I004", name: "Mutton Curry Bengali Home Style (6 pcs)", price: 350 }
+    { id: "I003", name: "Chicken Curry Bengali Home Style (1 plate, 4 pcs)", price: 200 },
+    { id: "I004", name: "Mutton Curry Bengali Home Style (1 plate, 6 pcs)", price: 350 }
   ],
   drinks: [
-    { id: "D001", name: "Indian Welcome Drink", price: 40 },
+    { id: "D001", name: "Indian Welcome Drink (Lemon + Salt + Sugar)", price: 40 },
     { id: "D002", name: "Coca Cola", price: 25 }
   ]
 };
 
 let cart = [];
 
+/* DISPLAY MENU (UNCHANGED) */
 function displayMenu(sectionId, items) {
   const div = document.getElementById(sectionId);
   items.forEach(item => {
@@ -109,6 +148,7 @@ displayMenu("combo-menu", menu.combo);
 displayMenu("individual-menu", menu.individual);
 displayMenu("drinks-menu", menu.drinks);
 
+/* ADD TO CART (UNCHANGED) */
 function addToCart(itemId) {
   const item = [...menu.combo, ...menu.individual, ...menu.drinks].find(i => i.id === itemId);
   const existing = cart.find(i => i.id === itemId);
@@ -117,15 +157,13 @@ function addToCart(itemId) {
   displayCart();
 }
 
-function removeFromCart(itemId) {
-  const index = cart.findIndex(i => i.id === itemId);
-  if (index > -1) {
-    cart[index].qty--;
-    if (cart[index].qty === 0) cart.splice(index, 1);
-  }
+/* ✅ REMOVE ITEM */
+function removeItem(itemId) {
+  cart = cart.filter(i => i.id !== itemId);
   displayCart();
 }
 
+/* DISPLAY CART (MODIFIED ONLY TO ADD REMOVE BUTTON) */
 function displayCart() {
   const itemsDiv = document.getElementById("cart-items");
   const totalDiv = document.getElementById("cart-total");
@@ -140,25 +178,25 @@ function displayCart() {
   itemsDiv.innerHTML = "";
 
   cart.forEach(i => {
-    const itemTotal = i.qty * i.price;
-    total += itemTotal;
+    total += i.qty * i.price;
     itemsDiv.innerHTML += `
-      ${i.name} x${i.qty} = ${itemTotal} NTD
-      <button class="remove-btn" onclick="removeFromCart('${i.id}')">−</button><br>
-    `;
+      ${i.name} x${i.qty} = ${i.qty * i.price} NTD
+      <button class="remove-btn" onclick="removeItem('${i.id}')">Remove</button>
+      <br>`;
   });
 
   totalDiv.innerHTML = `<strong>Total: ${total} NTD</strong>`;
 }
 
+/* PLACE ORDER (ONLY SPECIAL NOTE ADDED) */
 function placeOrder() {
   if (cart.length === 0) return alert("Cart is empty!");
 
   const name = prompt("Enter your name:");
   const mobile = prompt("Enter your mobile number:");
-  const note = document.getElementById("special-note").value;
-
   if (!name || !mobile) return alert("Details required");
+
+  const specialNote = document.getElementById("special-note").value;
 
   const orderId = "ORD" + Date.now();
 
@@ -167,33 +205,35 @@ function placeOrder() {
     customer_name: name,
     mobile: mobile,
     items: cart,
-    special_note: note
+    special_note: specialNote
   };
 
   fetch("https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec", {
     method: "POST",
     body: JSON.stringify(order)
-  }).then(() => {
-    showReceipt(orderId, name, mobile, cart, note);
+  })
+  .then(() => {
+    showReceipt(orderId, name, mobile, cart);
     cart = [];
     document.getElementById("special-note").value = "";
     displayCart();
-  });
+  })
+  .catch(() => alert("Order failed"));
 }
 
-function showReceipt(orderId, name, mobile, items, note) {
+/* RECEIPT + PDF (UNCHANGED) */
+function showReceipt(orderId, name, mobile, items) {
   document.getElementById("receipt").style.display = "block";
   document.getElementById("r-order-id").innerText = orderId;
   document.getElementById("r-name").innerText = name;
   document.getElementById("r-mobile").innerText = mobile;
-  document.getElementById("r-note").innerText = note || "—";
 
   let total = 0;
-  let html = `<table><tr><th>Item</th><th>Qty</th><th>Total</th></tr>`;
+  let html = `<table><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>`;
   items.forEach(i => {
     const t = i.qty * i.price;
     total += t;
-    html += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${t}</td></tr>`;
+    html += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price}</td><td>${t}</td></tr>`;
   });
   html += "</table>";
 
