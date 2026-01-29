@@ -4,94 +4,82 @@
   <meta charset="UTF-8">
   <title>🍽️ Akash's Kitchen – Admin Orders</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background:#f8f8f8; }
+    body { font-family: Arial; margin: 20px; background:#f8f8f8; }
     h1 { text-align: center; }
-    .order { 
-      border: 1px solid #ccc; 
-      padding: 15px; 
-      margin-bottom: 15px; 
-      background: #fff; 
+    .order {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #fff;
       border-radius: 8px;
     }
-    .order strong { color: #333; }
+    .note {
+      background:#fff3cd;
+      border-left:5px solid #f39c12;
+      padding:8px;
+      margin-top:8px;
+    }
     button {
-      padding: 6px 12px; 
-      margin-right: 5px; 
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer; 
+      padding: 6px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
       color: #fff;
     }
-    button.preparing { background: orange; }
-    button.ready { background: green; }
-    button.paid { background: blue; }
+    .preparing { background: orange; }
+    .ready { background: green; }
+    .paid { background: blue; }
   </style>
 </head>
 <body>
 
 <h1>🍽️ Akash's Kitchen – Orders</h1>
-
 <div id="orders">Loading...</div>
 
 <script>
-// 🔹 UPDATE THIS WITH YOUR CURRENT WEB APP URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec";
 
-// Load orders from Google Sheet
 async function loadOrders() {
-  try {
-    const res = await fetch(API_URL);
-    const orders = await res.json();
+  const res = await fetch(API_URL);
+  const orders = await res.json();
+  const div = document.getElementById("orders");
+  div.innerHTML = "";
 
-    const div = document.getElementById("orders");
-    div.innerHTML = "";
-
-    if (!orders || orders.length === 0) {
-      div.innerHTML = "<p>No orders yet.</p>";
-      return;
-    }
-
-    orders.forEach(order => {
-      div.innerHTML += `
-        <div class="order">
-          <p><strong>Order ID:</strong> ${order.orderId}</p>
-          <p><strong>Name:</strong> ${order.name}</p>
-          <p><strong>Items:</strong> ${order.items}</p>
-          <p><strong>Total:</strong> ${order.total} NTD</p>
-          <p><strong>Status:</strong> <span id="status-${order.orderId}">${order.status}</span></p>
-
-          <button class="preparing" onclick="updateStatus('${order.orderId}','PREPARING')">PREPARING</button>
-          <button class="ready" onclick="updateStatus('${order.orderId}','READY')">READY</button>
-          <button class="paid" onclick="updateStatus('${order.orderId}','PAID')">PAID</button>
-        </div>
-      `;
-    });
-
-  } catch(err) {
-    console.error(err);
-    document.getElementById("orders").innerHTML = "<p>Error loading orders</p>";
+  if (!orders.length) {
+    div.innerHTML = "<p>No orders yet.</p>";
+    return;
   }
+
+  orders.forEach(o => {
+    div.innerHTML += `
+      <div class="order">
+        <p><strong>Order ID:</strong> ${o.orderId}</p>
+        <p><strong>Name:</strong> ${o.name}</p>
+        <p><strong>Items:</strong> ${o.items}</p>
+        <p><strong>Total:</strong> ${o.total} NTD</p>
+
+        ${o.special_note ? `<div class="note"><strong>📝 Note:</strong> ${o.special_note}</div>` : ""}
+
+        <p><strong>Status:</strong> <span id="status-${o.orderId}">${o.status}</span></p>
+
+        <button class="preparing" onclick="updateStatus('${o.orderId}','PREPARING')">PREPARING</button>
+        <button class="ready" onclick="updateStatus('${o.orderId}','READY')">READY</button>
+        <button class="paid" onclick="updateStatus('${o.orderId}','PAID')">PAID</button>
+      </div>
+    `;
+  });
 }
 
-// Update status for a specific order
 async function updateStatus(orderId, status) {
-  try {
-    const url = `${API_URL}?action=update&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(status)}`;
-    const res = await fetch(url);
-    const result = await res.json();
-
-    if (result.result === "UPDATED") {
-      document.getElementById(`status-${orderId}`).innerText = status;
-    } else {
-      alert("Failed to update order status");
-    }
-  } catch(err) {
-    console.error(err);
-    alert("Error updating status");
+  const url = `${API_URL}?action=update&orderId=${orderId}&status=${status}`;
+  const res = await fetch(url);
+  const result = await res.json();
+  if (result.result === "UPDATED") {
+    document.getElementById(`status-${orderId}`).innerText = status;
   }
 }
 
-// Load orders on page load and refresh every 5 seconds
 loadOrders();
 setInterval(loadOrders, 5000);
 </script>
