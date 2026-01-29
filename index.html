@@ -168,7 +168,7 @@ function placeOrder() {
     special_note: note
   };
 
-  fetch("https://script.google.com/macros/s/AKfycbzFE7xeSXbEmAI9ngofWUDjHhYE9LvSfhDhW1S637vsiALEZmXCZEcLEYLqsUcu3xY9/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbwDeZIwk1escA33iAjyEdUOEW-XJVPN45BO3OJS_Vu-Je-AS0VqA974eC_DCJCSXJZK/exec", {
     method: "POST",
     body: JSON.stringify(order)
   }).then(() => {
@@ -218,7 +218,7 @@ function downloadPDF() {
   let y = 15;
   doc.setFontSize(18);
   doc.setTextColor(180, 60, 40);
-  doc.text("Akash's Kitchen", 105, y, null, null, "center");
+  doc.text("Your Today's receipt", 105, y, null, null, "center");
   y += 10;
 
   doc.setFontSize(11);
@@ -249,7 +249,7 @@ function downloadPDF() {
   doc.text("Signature: Akash Pal", 180, y + 10, null, null, "right");
   doc.text("Thank you! Please come again!", 105, y + 20, null, null, "center");
 
-  doc.save(`AkashKitchen_${orderId}.pdf`);
+  doc.save(`AkashKitchen_receipt${orderId}.pdf`);
 }
 </script>
 
