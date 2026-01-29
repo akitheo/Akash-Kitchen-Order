@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>🍽️ Akash's Kitchen – Admin Orders</title>
+  <title>🍽️ Akash's Kitchen – Kitchen Stuff</title>
   <style>
     body { font-family: Arial; margin: 20px; background:#f8f8f8; }
     h1 { text-align: center; }
@@ -19,8 +19,6 @@
       padding:8px;
       margin-top:8px;
     }
-    table { width:100%; border-collapse: collapse; margin-top: 8px; }
-    th, td { border:1px solid #333; padding:5px; text-align:left; }
     button {
       padding: 6px 12px;
       margin-right: 5px;
@@ -44,41 +42,28 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwDeZIwk1escA33iAjyEdUO
 
 async function loadOrders() {
   const res = await fetch(API_URL);
-  const orders = await res.json();
+  const rows = await res.json();
   const div = document.getElementById("orders");
   div.innerHTML = "";
 
-  if (!orders.length) {
+  if (!rows.length) {
     div.innerHTML = "<p>No orders yet.</p>";
     return;
   }
 
-  orders.forEach(o => {
+  rows.forEach(o => {
     const orderId = o.order_id || o.orderId;
     const name = o.customer_name || o.name;
-    const items = o.items || [];
-    const total = o.total || o.total_amount || 0;
+    const items = o.items || o.itemsText || "";
+    const total = o.total || o.total_amount || o.totalAmount || 0;
     const note = o.special_note || o.specialNote || "";
     const status = o.status || "";
-
-    // Build items table HTML
-    let itemsHTML = "<table><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>";
-    items.forEach(i => {
-      const t = i.qty * i.price;
-      itemsHTML += `<tr>
-        <td>${i.name}</td>
-        <td>${i.qty}</td>
-        <td>${i.price}</td>
-        <td>${t}</td>
-      </tr>`;
-    });
-    itemsHTML += "</table>";
 
     div.innerHTML += `
       <div class="order">
         <p><strong>Order ID:</strong> ${orderId}</p>
         <p><strong>Name:</strong> ${name}</p>
-        <div><strong>Items:</strong>${itemsHTML}</div>
+        <p><strong>Items:</strong> ${items}</p>
         <p><strong>Total:</strong> ${total} NTD</p>
 
         ${note ? `<div class="note"><strong>📝 Note:</strong> ${note}</div>` : ""}
@@ -87,7 +72,7 @@ async function loadOrders() {
 
         <button class="preparing" onclick="updateStatus('${orderId}','PREPARING')">PREPARING</button>
         <button class="ready" onclick="updateStatus('${orderId}','READY')">READY</button>
-        <button class="paid" onclick="updateStatus('${orderId}','PAID')">PAID</button>
+        
       </div>
     `;
   });
