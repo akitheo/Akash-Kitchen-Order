@@ -204,7 +204,7 @@ function showReceipt(orderId, name, mobile, items) {
   document.getElementById("download-pdf").style.display = "block";
 }
 
-/* PDF FUNCTION — UNCHANGED */
+/* PDF FUNCTION — ADD SIGNATURE + THANK YOU MESSAGE */
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -217,10 +217,12 @@ function downloadPDF() {
 
   let y = 15;
   doc.setFontSize(18);
+  doc.setTextColor(180, 60, 40);
   doc.text("Akash's Kitchen", 105, y, null, null, "center");
   y += 10;
 
   doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
   doc.text(`Date & Time: ${date}`, 10, y); y += 6;
   doc.text(`Order ID: ${orderId}`, 10, y); y += 6;
   doc.text(`Customer Name: ${name}`, 10, y); y += 6;
@@ -237,7 +239,15 @@ function downloadPDF() {
   });
 
   y = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(14);
+  doc.setTextColor(0, 120, 0);
   doc.text(`Grand Total: ${total} NTD`, 10, y);
+
+  // ✅ Signature & Thank You
+  doc.setFontSize(10);
+  doc.setTextColor(80);
+  doc.text("Signature: Akash Pal", 180, y + 10, null, null, "right");
+  doc.text("Thank you! Please come again!", 105, y + 20, null, null, "center");
 
   doc.save(`AkashKitchen_${orderId}.pdf`);
 }
